@@ -13,6 +13,10 @@ python setup.py install
 ```
 from the directory containing the `setup.py` file. Without root access you can run ``python setup.py install --user``.
 
+## Dependencies
+
+The program currently run both under Python 2.7 and Python 3, and requires the Numpy and NetworkX packages. It does not require Sage.
+
 ## Current functionality
 
 1) Defining the Humphries generators on closed surfaces.
@@ -29,7 +33,7 @@ from the directory containing the `setup.py` file. Without root access you can r
 >>> f.is_identity()
 False
 
->>> g = A[0]*A[1]*A[0]^(-1)*A[1]^(-1)  # A[0] and A[1] are disjoint curves, so they commute.
+>>> g = A[0]*A[1]*A[0]**(-1)*A[1]**(-1)  # A[0] and A[1] are disjoint curves, so they commute.
 >>> g.is_identity()
 True
 ```
@@ -50,7 +54,7 @@ True
 4) Approximating stretch factors (currently in a very dumb way).
 
 ```
->>> f = A[0]*B[0]^(-1)  # partial pA supported on a torus
+>>> f = A[0]*B[0]**(-1)  # partial pA supported on a torus
 >>> f.stretch_factor()
 2.61803398874990
 ```
@@ -58,7 +62,7 @@ True
 5) Computing orders.
 
 ```
->>> f = A[0]*B[0]^(-1)
+>>> f = A[0]*B[0]**(-1)
 >>> f.order()
 0
 
@@ -72,7 +76,7 @@ True
 
 ```
 >>> A, B, c = humphries_generators(2)
->>> f = A[0]*B[0]^(-1)
+>>> f = A[0]*B[0]**(-1)
 >>> f.action_on_homology()
 [ 2 -1  1  0]
 [ 0  1  0  0]
@@ -81,8 +85,8 @@ True
 
 >>> g = hyperelliptic_involution(2)
 >>> g.action_on_homology()
-[-1  0  0  0]
-[ 0 -1  0  0]
-[ 0  0 -1  0]
-[ 0  0  0 -1]
+matrix([[-1, 0, 0, 0],
+        [0, -1, 0, 0],
+        [0, 0, -1, 0],
+        [0, 0, 0, -1]], dtype=object)
 ```

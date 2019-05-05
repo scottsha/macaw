@@ -49,6 +49,10 @@ class PantsDecomposition(Surface):
     value would be glued in the orientable direction while punctures
     who are binary complement would be glued in opposite direction.
 
+    If a boundary component is encoded by a positive/negative integer, then the
+    it is oriented so that the surface is on the left/right side of the
+    boundary curve.
+
     INPUT:
 
     - ``gluing_list`` -- a list of lists with three nonzero integers.
@@ -81,10 +85,9 @@ class PantsDecomposition(Surface):
 
         num_pants = len(gluing_list)
         self._pants_curve_to_pants = {}
-        #gluing_cnt = 0
+        # gluing_cnt = 0
         # inner_pants_curves = set()
         # non_ori_bdy_set = set()
-
 
         for i in range(len(gluing_list)):
             pant = gluing_list[i]
@@ -99,10 +102,10 @@ class PantsDecomposition(Surface):
                 # self._pants_curve_to_pants[pants_curve] =
                 if pants_curve not in self._pants_curve_to_pants.keys():
                     self._pants_curve_to_pants[pants_curve] = [[], []]
-                side = LEFT if bdy>0 else RIGHT
+                side = LEFT if bdy > 0 else RIGHT
                 self._pants_curve_to_pants[pants_curve][side].append((i, j))
 
-                    # inner_pants_curves.add(pants_curve)
+                # inner_pants_curves.add(pants_curve)
                 #     if bdy < 0:
                 #         pants_curve_to_pants[pants_curve][1] = i
                 #     else:
@@ -114,17 +117,16 @@ class PantsDecomposition(Surface):
                 #     else:
                 #         pants_curve_to_pants[pants_curve] = [i, None]
 
-
         self._index_of_inner_pants_curve = {}
         for i in range(self.num_inner_pants_curves()):
             c = self.inner_pants_curves()[i]
             self._index_of_inner_pants_curve[c] = i
 
-        super(PantsDecomposition, self).__init__(\
-                    euler_char = -1*num_pants,
-                    num_punctures = self.num_boundary_pants_curves(),
-                    is_orientable = self._compute_orientable())
-        #print self.__repr__()
+        super(PantsDecomposition, self).__init__(
+            euler_char=-1*num_pants,
+            num_punctures=self.num_boundary_pants_curves(),
+            is_orientable=self._compute_orientable())
+        # print self.__repr__()
 
         # self._pants_curve_to_pants = pants_curve_to_pants
         # self._inner_pants_curves = inner_pants_curves
@@ -215,9 +217,9 @@ class PantsDecomposition(Surface):
         edge_ls = []
         for c in self.inner_pants_curves():
             left, right = self.pants_curve_to_pants(c)
-            if len(left) == 1: # orientation-preserving gluing
+            if len(left) == 1:  # orientation-preserving gluing
                 edge_ls.append((left[0], right[0], 0))
-            elif len(left) == 2: # orientation-reversion gluing
+            elif len(left) == 2:  # orientation-reversion gluing
                 # two pants on the left
                 edge_ls.append((left[0], left[1], 1))
             else:
@@ -272,8 +274,10 @@ class PantsDecomposition(Surface):
         pass
 
     def __repr__(self):
-        return 'Pants decomposition with gluing list ' + repr(self._gluing_list)
-        # return 'Pants decomposition of the ' + super(PantsDecomposition, self).__repr__().lower()
+        return 'Pants decomposition with gluing list ' + \
+            repr(self._gluing_list)
+        # return 'Pants decomposition of the ' + super(PantsDecomposition,
+        # self).__repr__().lower()
 
     def bdy_index_left_of_pants_curve(self, pants_curve):
         """
@@ -294,8 +298,18 @@ class PantsDecomposition(Surface):
             >>> p.bdy_index_left_of_pants_curve(-3)
             0
 
+        NOTE: Outside this file, this is only used to determine if two
+        boundaries follow each other in the cyclic order or not.
+
         """
         return self.pants_curve_to_pants(pants_curve)[LEFT][0][BDY_IDX]
+
+    def bdy_index_next_to_pants_curve(self, pants_curve, side):
+        return self.bdy_index_left_of_pants_curve(pants_curve if side == LEFT
+                                                  else -pants_curve)
+
+    def pant_next_to_pants_curve(self, pants_curve, side):
+        return self.pants_curve_to_pants(pants_curve)[side][0][PANT]
 
     def pants_curve_to_pants(self, pants_curve):
         """
@@ -386,7 +400,7 @@ class PantsDecomposition(Surface):
         """
         Return the numbers of the pairs of pants of the pants decomposition.
         """
-        return range(self.num_pants())
+        return list(range(self.num_pants()))
 
     def pants_curves(self):
         """
@@ -406,7 +420,7 @@ class PantsDecomposition(Surface):
             [1, 2, 3, 4, 5, 6]
 
         """
-        return range(1, len(self._pants_curve_to_pants)+1)
+        return list(range(1, len(self._pants_curve_to_pants)+1))
 
     def inner_pants_curves(self):
         """
@@ -429,7 +443,7 @@ class PantsDecomposition(Surface):
         def is_inner(c):
             a = self.pants_curve_to_pants(c)
             return len(a[0]) + len(a[1]) == 2
-        return filter(is_inner, self.pants_curves())
+        return list(filter(is_inner, self.pants_curves()))
 
     def index_of_inner_pants_curve(self, pants_curve):
         return self._index_of_inner_pants_curve[abs(pants_curve)]
@@ -452,7 +466,8 @@ class PantsDecomposition(Surface):
             []
 
         """
-        return sorted(list(set(self.pants_curves()) - set(self.inner_pants_curves())))
+        return sorted(list(set(self.pants_curves()) -
+                           set(self.inner_pants_curves())))
 
     def num_pants_curves(self):
         """
@@ -521,15 +536,18 @@ class PantsDecomposition(Surface):
         return TYPE_1 if left[0][PANT] == right[0][PANT] else TYPE_2
 
     def apply_half_twist_on_marking(self, pant, bdy_idx):
-        """
-        Modify the pants decomposition when the marking of a pair of pants is changed by a half-twist. The effect of this is simply changing the cyclic orientation of the boundary curves.
+        """Modify the pants decomposition when the marking of a pair of pants is
+        changed by a half-twist. The effect of this is simply changing the
+        cyclic orientation of the boundary curves.
 
         INPUT:
         - ``pant`` -- the pair of pants in the decompositions when twising occurs
         - ``bdy_idx`` -- the index of the boundary curve (0, 1 or 2) which is fixed. The other two boundaries get interchanged.
+
         """
-        ls = self._gluing_list[pant] 
-        ls[(bdy_idx+1)%3], ls[(bdy_idx+2)%3] = ls[(bdy_idx+2)%3], ls[(bdy_idx+1)%3] 
+        ls = self._gluing_list[pant]
+        ls[(bdy_idx+1) % 3], ls[(bdy_idx+2) % 3] = \
+            ls[(bdy_idx+2) % 3], ls[(bdy_idx+1) % 3]
 
     def apply_elementary_move(self, pants_curve):
         """Create a new pants decomposition by changing one pants curve.
@@ -589,28 +607,31 @@ class PantsDecomposition(Surface):
 
         typ = self.elementary_move_type(pants_curve)
         if typ == BOUNDARY:
-            raise ValueError("Cannot do an elementary move about a boundary curve.")
+            raise ValueError("Cannot do an elementary move "
+                             "about a boundary curve.")
         elif typ == TYPE_1:
             # combinatorics of the pants decomposition does not change when we
             # do a first elementary move
             return PantsDecomposition(self._gluing_list)
 
-        ap = [self.pants_curve_to_pants(pants_curve)[i][0] for i in [LEFT, RIGHT]]
+        ap = [self.pants_curve_to_pants(pants_curve)[i][0] for i in [LEFT,
+                                                                     RIGHT]]
         # print ap
         gl = list(self._gluing_list)
         # print gl
-        old_lists = [[gl[ap[side][PANT]][(ap[side][BDY_IDX]+k)%3] for k in range(3)] for side in [LEFT, RIGHT]]
+        old_lists = [[gl[ap[side][PANT]][(ap[side][BDY_IDX]+k) % 3] for k in
+                      range(3)] for side in [LEFT, RIGHT]]
         # print old_lists
 
         for side in [LEFT, RIGHT]:
-            gl[ap[side][PANT]] = [old_lists[side][0], old_lists[side][2], old_lists[(side+1)%2][1]]
+            gl[ap[side][PANT]] = [old_lists[side][0], old_lists[side][2],
+                                  old_lists[(side+1) % 2][1]]
 
         return PantsDecomposition(gl)
 
     def _torus_boundary_curve(self, pants_curve):
-        """
+        """The boundary curve is oriented in a way that its left side is the torus.
 
-        The boundary curve is oriented in a way that its left side is the torus.
         """
         assert self.elementary_move_type(pants_curve) == TYPE_1
         pant = self.pants_curve_to_pants(pants_curve)[LEFT][0][PANT]
